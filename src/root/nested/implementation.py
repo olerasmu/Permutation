@@ -5,6 +5,7 @@ Created on 4. apr. 2014
 '''
 
 import math
+import timeit
 class Permutation(object):
     
     def __init__(self, w=None, block_size=None, ts=None, tr=None, a=None, filepath=None):
@@ -23,6 +24,8 @@ class Permutation(object):
     hg_tab = []
     block_tab = []
     symbol_tab = []
+    hourglass_tab = []
+    original_tab = []
     
     
     
@@ -87,24 +90,40 @@ class Permutation(object):
         
         #h is the modular inverse of g
         self.h = self.modinv(self.g, self.n*self.m) #g % self.n*self.m
-        
-        print self.h
-         
-        
         print "g:", self.g, "h:", self.h
     
+    #indextab = []
     def hourglass(self, i, h, n, m):
         h_i = self.symbol_tab[int((i*h) % (n*m))]
+        #self.indextab.append(int((i*h) % (n*m)))
+        
+        self.hourglass_tab.append(h_i)
+        #=======================================================================
+        # if len(self.hourglass_tab) > i:
+        #     self.hourglass_tab[i] = h_i
+        # else:
+        #     self.hourglass_tab.append(h_i)
+        #=======================================================================
+       
         return h_i
         #print "Index:", int((i*h) % (n*m)), "based on i:", i, "times h:", h
         #print "Symbol:", h_i
     
+    
     def revHourglass(self, i, g, n, m):
-        g_i = self.symbol_tab[i*g % n*m]
-        print i*g % n*m
-        print g_i
+        g_i = self.hourglass_tab[int((i*g) % (n*m))]
+        self.original_tab.append(g_i)
+        return g_i
+    
+    def encapsulate(self):
+        for i in range(0, len(self.symbol_tab)):
+            self.hourglass(i, self.h, self.n, self.m)
 
-per = Permutation(w = 8, filepath = "C:\Users\olerasmu\Documents\\4mb_file.txt", block_size=4*1024, tr=0.0003125, ts=0.06)
+    
+    def decapsulate(self):
+        for i in range(0, len(self.hourglass_tab)):
+            self.revHourglass(i, self.g, self.n, self.m)
+per = Permutation(w = 8, filepath = "C:\Users\Ole\Documents\Skole\Master\\32mb_file.txt", block_size=4*1024, tr=0.0003125, ts=0.06)
 per.symbolifyFile()
 print "Length of symbol_tab:", len(per.symbol_tab)
 #print len(per.block_tab)
@@ -114,11 +133,43 @@ print "Length of symbol_tab:", len(per.symbol_tab)
 
 per.computeGandH(3)
 
-testtab = []
-#print per.modinv(98304, 1073741824)
-for i in range(0,len(per.symbol_tab)):
-    testtab.append(per.hourglass(i, per.h, per.n, per.m))
-print len(testtab)
+print "Starter encapsulation timer neste"
+start1 = timeit.default_timer()
 
-print testtab[524287]
-#print "tab:", per.symbol_tab
+per.encapsulate()
+#===============================================================================
+# for i in range(0, len(per.symbol_tab)):
+#     per.hourglass(i, per.h, per.n, per.m)
+#===============================================================================
+
+stop1 = timeit.default_timer()
+print "Stoppet encapsulation timer forrige, tid:", stop1 - start1
+
+
+print "Starter decapsulation timer neste"
+
+print per.hourglass_tab[5]
+
+start2 = timeit.default_timer()
+
+per.decapsulate()
+
+stop2 = timeit.default_timer()
+
+print "Stoppet decapsulation timer forrige, tid:", stop2 - start2
+#===============================================================================
+# orgtab = []
+# for i in range(0, len(per.hourglass_tab)):
+#     orgtab.append(per.revHourglass(i, per.g, per.n, per.m))
+#===============================================================================
+
+
+
+print per.symbol_tab[5]," ", per.original_tab[5]
+
+#indexsortedtab = sorted(per.indextab)
+
+#===============================================================================
+# for i in range(0, len(indexsortedtab)):
+#     print indexsortedtab[i]
+#===============================================================================
